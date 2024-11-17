@@ -1,0 +1,2 @@
+# CBIR
+Proyecto CBIR AAPI 2024 GCDIA
