@@ -5,6 +5,6 @@ Grado en Ciencia de Datos e Inteligencia Artificial - Universidad Politécnica d
 
 Autores : Daniel Llopis y Alba Sanz
 
-Requisito Python >= 3.8.
+Requisito - Python >= 3.8.
 
 Ejecución en MacOS : ejecute en su terminal "python -m streamlit run app.py" una vez esté en el directorio correcto. La aplicación se ejecutará en http://localhost:8501.
