@@ -8,16 +8,16 @@ from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input
 from tensorflow.keras.preprocessing import image
 from skimage.feature import local_binary_pattern
 
-# Definir las rutas
+# Definimos las rutas
 FILES_PATH = os.getcwd()
 IMAGES_PATH = os.path.join(FILES_PATH, 'images')
 DB_PATH = os.path.join(FILES_PATH, 'database')
 
-# Crear la carpeta database si no existe
+# Creamos la carpeta database si no existe
 if not os.path.exists(DB_PATH):
     os.makedirs(DB_PATH)
 
-# Obtener las rutas de las imágenes y las etiquetas
+# Obtenemos las rutas de las imágenes y las etiquetas
 def get_image_paths(directory):
     image_paths = []
     image_names = []
@@ -34,18 +34,18 @@ def get_image_paths(directory):
                 rel_file = os.path.join(rel_dir, filename)
                 image_names.append(rel_file)
                 
-                # Extraer la etiqueta (nombre de la subcarpeta)
+                # Extraemos la etiqueta (nombre de la subcarpeta)
                 label = os.path.basename(root)
                 labels.append(label)
     return image_paths, image_names, labels
 
 image_paths, image_names, labels = get_image_paths(IMAGES_PATH)
 
-# Crear el archivo db.csv con los nombres de las imágenes
+# Creamos el archivo db.csv con los nombres de las imágenes
 df_db = pd.DataFrame({'image': image_names})
 df_db.to_csv(os.path.join(DB_PATH, 'db.csv'), index=False)
 
-# Crear el archivo labels.csv con los nombres de las imágenes y sus etiquetas
+# Creamos el archivo labels.csv con los nombres de las imágenes y sus etiquetas
 df_labels = pd.DataFrame({'image': image_names, 'label': labels})
 df_labels.to_csv(os.path.join(DB_PATH, 'labels.csv'), index=False)
 
@@ -55,21 +55,21 @@ df_labels.to_csv(os.path.join(DB_PATH, 'labels.csv'), index=False)
 
 # Extractor 1: Histogramas de Color
 def extract_color_histogram(image_path):
-    # Cargar la imagen
+    # Cargamos la imagen
     image = cv2.imread(image_path)
-    # Redimensionar la imagen
+    # Redimensionamos la imagen
     image = cv2.resize(image, (224, 224))
-    # Convertir a espacio de color HSV
+    # Convertimos a espacio de color HSV
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    # Calcular el histograma de color
+    # Calculamos el histograma de color
     hist = cv2.calcHist([hsv], [0, 1, 2], None, [8, 8, 8],
                         [0, 180, 0, 256, 0, 256])
-    # Normalizar el histograma
+    # Normalizamos el histograma
     cv2.normalize(hist, hist)
     return hist.flatten()
 
 # Extractor 2: CNN Pre-entrenada (VGG16)
-# Cargar el modelo pre-entrenado
+# Cargamos el modelo pre-entrenado
 model_cnn = VGG16(weights='imagenet', include_top=False, pooling='max')
 
 def extract_cnn_features(image_path):
@@ -83,9 +83,9 @@ def extract_cnn_features(image_path):
 
 # Extractor 3: Histogramas de Textura (LBP)
 def extract_texture_histogram(image_path):
-    # Cargar la imagen en escala de grises
+    # Cargamos la imagen en escala de grises
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    # Redimensionar la imagen
+    # Redimensionamos la imagen
     image = cv2.resize(image, (224, 224))
 
     # Parámetros de LBP
@@ -93,14 +93,14 @@ def extract_texture_histogram(image_path):
     n_points = 8 * radius
     method = 'uniform'
 
-    # Calcular el patrón LBP
+    # Calculamos el patrón LBP
     lbp = local_binary_pattern(image, n_points, radius, method)
 
-    # Calcular el histograma
+    # Calculamos el histograma
     n_bins = int(lbp.max() + 1)
     hist, _ = np.histogram(lbp.ravel(), bins=n_bins, range=(0, n_bins))
 
-    # Normalizar el histograma
+    # Normalizamos el histograma
     hist = hist.astype('float32')
     hist /= (hist.sum() + 1e-6)
 
@@ -108,15 +108,15 @@ def extract_texture_histogram(image_path):
 
 # Extractor 4 : HOG (Histogram of Oriented Gradients)   
 def extract_hog_features(image_path):
-    # Cargar la imagen en escala de grises
+    # Cargamos la imagen en escala de grises
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    # Redimensionar la imagen a un tamaño uniforme
+    # Redimensionamos la imagen a un tamaño uniforme
     image = cv2.resize(image, (128, 128))
     
-    # Definir el descriptor HOG
+    # Definimos el descriptor HOG
     hog = cv2.HOGDescriptor()
     
-    # Calcular el descriptor HOG
+    # Calculamos el descriptor HOG
     h = hog.compute(image)
     h = h.flatten()
     
@@ -124,25 +124,25 @@ def extract_hog_features(image_path):
 
 # Extractor 5 : ORB
 def extract_orb_features(image_path):
-    # Cargar la imagen en escala de grises
+    # Cargamos la imagen en escala de grises
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    # Redimensionar la imagen
+    # Redimensionamos la imagen
     image = cv2.resize(image, (224, 224))
     
-    # Crear el detector ORB
+    # Creamos el detector ORB
     orb = cv2.ORB_create(nfeatures=500)
     
-    # Detectar los puntos clave y calcular los descriptores
+    # Detectamos los puntos clave y calcular los descriptores
     keypoints, descriptors = orb.detectAndCompute(image, None)
     
-    # Si no se detectan descriptores, crear un vector de ceros
+    # Si no se detectan descriptores, creamos un vector de ceros
     if descriptors is None:
         descriptors = np.zeros((1, 32), dtype=np.uint8)
     
-    # Aplanar los descriptores en un solo vector
+    # Aplanamos los descriptores en un solo vector
     features = descriptors.flatten()
     
-    # Si el vector es más corto que un tamaño fijo, rellenar con ceros
+    # Si el vector es más corto que un tamaño fijo, rellenamos con ceros
     max_length = 500 * 32  # 500 características, cada una de 32 bytes
     if features.size < max_length:
         features = np.pad(features, (0, max_length - features.size), 'constant')
@@ -165,21 +165,21 @@ extractors = [
 ]
 
 for extractor_name, extractor_function in extractors:
-    # Extraer características
+    # Extraemos características
     features_list = []
     for img_path in image_paths:
         features = extractor_function(img_path)
         features_list.append(features)
     features_array = np.array(features_list).astype('float32')
 
-    # Normalizar las características
+    # Normalizamos las características
     features_array = normalize(features_array, norm='l2')
 
-    # Crear el índice FAISS
+    # Creamos el índice FAISS
     d = features_array.shape[1]
     index = faiss.IndexFlatL2(d)
     index.add(features_array)
 
-    # Guardar el índice
+    # Guardamos el índice
     index_filename = f'{extractor_name}.index'
     faiss.write_index(index, os.path.join(DB_PATH, index_filename))
