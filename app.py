@@ -77,17 +77,17 @@ def retrieve_image(img_query, feature_extractor, n_imgs=100):
         # Función para extraer características
         def extract_color_histogram(image_pil):
             import cv2
-            # Convertir PIL Image a OpenCV
+            # Convertimos PIL Image a OpenCV
             image = np.array(image_pil.convert('RGB'))
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            # Redimensionar la imagen
+            # Redimensionamos la imagen
             image = cv2.resize(image, (224, 224))
-            # Convertir a espacio de color HSV
+            # Convertimos a espacio de color HSV
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-            # Calcular el histograma de color
+            # Calculamos el histograma de color
             hist = cv2.calcHist([hsv], [0, 1, 2], None, [8, 8, 8],
                                 [0, 180, 0, 256, 0, 256])
-            # Normalizar el histograma
+            # Normalizamos el histograma
             cv2.normalize(hist, hist)
             return hist.flatten()
 
@@ -119,7 +119,7 @@ def retrieve_image(img_query, feature_extractor, n_imgs=100):
         import cv2
 
         def extract_texture_histogram(image_pil):
-            # Convertir PIL Image a escala de grises
+            # Convertimos PIL Image a escala de grises
             image = np.array(image_pil.convert('L'))
 
             # Parámetros de LBP
@@ -127,14 +127,14 @@ def retrieve_image(img_query, feature_extractor, n_imgs=100):
             n_points = 8 * radius
             method = 'uniform'
 
-            # Calcular el patrón LBP
+            # Calculamos el patrón LBP
             lbp = local_binary_pattern(image, n_points, radius, method)
 
-            # Calcular el histograma
+            # Calculamos el histograma
             n_bins = int(lbp.max() + 1)
             hist, _ = np.histogram(lbp.ravel(), bins=n_bins, range=(0, n_bins))
 
-            # Normalizar el histograma
+            # Normalizamos el histograma
             hist = hist.astype('float32')
             hist /= (hist.sum() + 1e-6)
 
@@ -147,15 +147,15 @@ def retrieve_image(img_query, feature_extractor, n_imgs=100):
         # Función para extraer características HOG
         def extract_hog_features(image_pil):
             import cv2
-            # Convertir PIL Image a escala de grises
+            # Convertimos PIL Image a escala de grises
             image = np.array(image_pil.convert('L'))
-            # Redimensionar la imagen
+            # Redimensionamos la imagen
             image = cv2.resize(image, (128, 128))
             
-            # Definir el descriptor HOG
+            # Definimos el descriptor HOG
             hog = cv2.HOGDescriptor()
             
-            # Calcular el descriptor HOG
+            # Calculamos el descriptor HOG
             h = hog.compute(image)
             h = h.flatten()
             
@@ -168,25 +168,25 @@ def retrieve_image(img_query, feature_extractor, n_imgs=100):
         # Función para extraer características ORB
         def extract_orb_features(image_pil):
             import cv2
-            # Convertir PIL Image a escala de grises
+            # Convertimos PIL Image a escala de grises
             image = np.array(image_pil.convert('L'))
-            # Redimensionar la imagen
+            # Redimensionamos la imagen
             image = cv2.resize(image, (224, 224))
             
-            # Crear el detector ORB
+            # Creamos el detector ORB
             orb = cv2.ORB_create(nfeatures=500)
             
-            # Detectar los puntos clave y calcular los descriptores
+            # Detectamos los puntos clave y calcular los descriptores
             keypoints, descriptors = orb.detectAndCompute(image, None)
             
-            # Si no se detectan descriptores, crear un vector de ceros
+            # Si no se detectan descriptores, creamos un vector de ceros
             if descriptors is None:
                 descriptors = np.zeros((1, 32), dtype=np.uint8)
             
-            # Aplanar los descriptores en un solo vector
+            # Aplanamos los descriptores en un solo vector
             features = descriptors.flatten()
             
-            # Si el vector es más corto que un tamaño fijo, rellenar con ceros
+            # Si el vector es más corto que un tamaño fijo, rellenamos con ceros
             max_length = 500 * 32  # 500 características, cada una de 32 bytes
             if features.size < max_length:
                 features = np.pad(features, (0, max_length - features.size), 'constant')
@@ -201,7 +201,7 @@ def retrieve_image(img_query, feature_extractor, n_imgs=100):
         st.error('Extractor de características desconocido.')
         return []
 
-    # Procesar la imagen de consulta y extraer características
+    # Procesamos la imagen de consulta y extraer características
     embeddings = model_feature_extractor(img_query)
     vector = np.array([embeddings]).astype('float32')
     faiss.normalize_L2(vector)
@@ -231,10 +231,10 @@ def main():
 
         if img_file:
             img = Image.open(img_file)
-            # Obtener una imagen recortada desde el frontend
+            # Obtenemos una imagen recortada desde el frontend
             cropped_img = st_cropper(img, realtime_update=True, box_color='#FF0004')
 
-            # Mostrar vista previa de la imagen recortada
+            # Mostramos vista previa de la imagen recortada
             st.write("Previsualización")
             _ = cropped_img.thumbnail((150,150))
             st.image(cropped_img)
@@ -262,8 +262,8 @@ def main():
                 end = time.time()
                 st.markdown('**Finalizado en ' + str(round(end - start, 2)) + ' segundos**')
 
-                # Calcular las métricas
-                n = 10  # Puedes cambiar N según tus necesidades
+                # Calculamos las métricas
+                n = 10 # Número de imágenes a recuperar
 
                 precision_at_n = calculate_precision_at_n(query_label, retriev, n, labels_df)
                 recall_at_n = calculate_recall_at_n(query_label, retriev, n, labels_df)
@@ -275,7 +275,7 @@ def main():
                 st.write(f"**Average Precision:** {average_precision:.2f}")
                 st.write(f"**F1 Score:** {f1_score:.2f}")
 
-                # Mostrar las imágenes recuperadas
+                # Mostramos las imágenes recuperadas
                 cols = st.columns(5)
                 for i, idx in enumerate(retriev[:n]):
                     img_name = image_list[idx]
